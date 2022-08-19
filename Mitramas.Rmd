@@ -1,0 +1,99 @@
+---
+title: "Mitramas"
+author: "Gemni"
+date: "2022-08-18"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(scipen=999)
+```
+
+#remove daftar list environtment
+```{r}
+rm(list=ls())
+```
+
+#set up environment
+```{r}
+library(readxl)
+library(dplyr)
+library(tidyr)
+library(tidyverse)
+library(googlesheets4)
+```
+
+
+ETL
+#extraction data
+```{r}
+aktivitas <- read_xlsx("Data Aktivitas.xlsx")
+```
+
+#transform data
+##check summary data
+```{r}
+summary(aktivitas)
+```
+
+##check missing value
+```{r}
+sum(is.na(aktivitas$`No.`))
+sum(is.na(aktivitas$`Tanggal`))
+sum(is.na(aktivitas$`Nomor`))
+sum(is.na(aktivitas$`ATM ID`))
+sum(is.na(aktivitas$Lokasi))
+sum(is.na(aktivitas$`Jenis Layanan`))
+sum(is.na(aktivitas$`Laporan Kerusakan`))
+sum(is.na(aktivitas$`Pekerjaan Dilakukan`))
+sum(is.na(aktivitas$`Nomor Tiket`))
+sum(is.na(aktivitas$`Penggantian Sparepart`))
+sum(is.na(aktivitas$`Jumlah Part`))
+sum(is.na(aktivitas$`Status`))
+sum(is.na(aktivitas$`CSE`))
+sum(is.na(aktivitas$`Pilihan`))
+```
+
+
+### drop column > 35%
+```{r}
+df_aktivitas <- aktivitas %>% 
+  select(-c(No., `Nomor Tiket`, `Penggantian Sparepart`, `Jumlah Part`, Status, Pilihan))
+```
+
+###drop missing value
+```{r}
+df_aktivitas <- df_aktivitas %>% 
+  drop_na(Tanggal) %>% 
+  drop_na(Nomor) %>% 
+  drop_na(`ATM ID`)
+```
+
+###check duplicate value
+```{r}
+sum(duplicated(df_aktivitas))
+```
+
+##Load Data
+
+###menyambungkan API R ke Gstudio
+```{r}
+gs4_auth(path = "salt-gemni-key.json")
+
+getwd()
+```
+
+###melakukan koneksi data ke spreadsheet
+```{r}
+gsheet <- gs4_get("https://docs.google.com/spreadsheets/d/1S4cVxfML_EReeXBis3U77afBipt5A2D6gKnd84ZJlNE/edit#gid=0")
+```
+
+###membuat data di spreadsheet
+```{r}
+range_write(gsheet,
+            df_aktivitas,
+            sheet = "Sheet1")
+```
+
+
